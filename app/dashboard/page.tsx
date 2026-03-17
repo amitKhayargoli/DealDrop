@@ -66,7 +66,7 @@ export default function DashboardPage() {
     if (url.includes("amazon.")) return "amazon";
     if (url.includes("flipkart.")) return "flipkart";
     if (url.includes("daraz.")) return "daraz";
-    return "amazon"; // fallback or handle unknown
+    return "daraz"; // fallback or handle unknown
   }
 
   const handleAddProduct = async (url: string) => {
