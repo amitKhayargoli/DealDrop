@@ -10,9 +10,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "DealDrop — Track Amazon Prices & Save Money",
+  title: "DealDrop - Track Product Prices & Save Money",
   description:
-    "DealDrop helps you track Amazon product prices over time. Paste a product link, and we'll watch the price and alert you when it drops.",
+    "DealDrop helps you track Product prices over time. Paste a product link, and we'll watch the price and alert you when it drops.",
   keywords: ["price tracker", "amazon deals", "price drop alert", "DealDrop"],
 };
 
