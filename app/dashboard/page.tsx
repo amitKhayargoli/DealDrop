@@ -50,11 +50,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
       try {
         const products = await getProducts();
         setProducts(products || []);
+        setLoading(false);
       } catch (err) {
         console.log("Not authenticated");
+        setLoading(false);
       }
     };
 
@@ -160,7 +163,9 @@ export default function DashboardPage() {
                   Tracked Products
                 </h2>
                 <div className="border-4 border-black bg-[#FF6B6B] px-3 py-1 neo-shadow-sm">
-                  <span className="font-black text-sm">{products.length}</span>
+                  <span className="font-black text-sm">
+                    {products?.length || 0}
+                  </span>
                 </div>
               </div>
               <div className="hidden sm:flex items-center gap-2 border-2 border-black/20 px-3 py-1">
@@ -171,7 +176,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {products.length === 0 ? (
+            {products && products.length === 0 ? (
               <div className="border-4 border-dashed border-black bg-white py-20 flex flex-col items-center gap-4 neo-shadow text-center">
                 <div className="border-4 border-black bg-[#FFD93D] w-16 h-16 flex items-center justify-center neo-shadow-sm">
                   <Plus className="w-8 h-8 stroke-[3px]" />
