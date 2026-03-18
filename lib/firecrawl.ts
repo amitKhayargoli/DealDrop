@@ -33,8 +33,6 @@ export async function scrapeProduct(url: string): Promise<ProductData | null> {
       ],
     });
 
-    console.log("Firecrawl result:", result); // <-- Add this
-
     if (result?.json) {
       const data = result.json as {
         productName: string;

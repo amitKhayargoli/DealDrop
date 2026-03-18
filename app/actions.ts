@@ -157,7 +157,6 @@ export async function getProducts() {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    console.log("Supabase raw data from getProducts:", data);
 
     return data.map((item: any) => {
       const currentPrice =

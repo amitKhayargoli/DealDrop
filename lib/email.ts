@@ -62,7 +62,6 @@ export async function sendPriceDropAlert(
       return { success: false, error };
     }
 
-    console.log("Resend sent:", data);
     return { success: true, data };
   } catch (error) {
     console.error("Error in sendPriceDropAlert:", error);

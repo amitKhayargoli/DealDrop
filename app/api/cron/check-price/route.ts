@@ -36,8 +36,6 @@ export async function POST(request: NextRequest) {
 
     if (productsError) throw productsError;
 
-    console.log(`Found ${products.length} products`);
-
     const results = {
       total: products.length,
       updated: 0,
@@ -101,7 +99,6 @@ export async function POST(request: NextRequest) {
                 oldPrice,
                 newPrice,
               );
-              console.log("📨 Email result:", result);
 
               if (result.success) {
                 results.alertSent++;

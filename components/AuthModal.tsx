@@ -65,11 +65,6 @@ export default function AuthModal({ defaultTab, onClose }: AuthModalProps) {
         redirect("/dashboard");
       }
     } else {
-      console.log("Attempting Signup with payload:", {
-        email: email.trim(),
-        passwordLength: password.length,
-        name,
-      });
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
