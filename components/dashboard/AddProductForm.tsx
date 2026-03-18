@@ -57,7 +57,7 @@ export default function AddProductForm({ onAdd }: AddProductFormProps) {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row gap-0 border-4 border-black neo-shadow">
+        <div className="flex flex-row gap-0 border-4 border-black neo-shadow">
           <input
             type="url"
             value={url}
@@ -65,15 +65,15 @@ export default function AddProductForm({ onAdd }: AddProductFormProps) {
               setUrl(e.target.value);
               setError("");
             }}
-            placeholder="https://www.amazon.in/dp/XXXXXXXXXX"
+            placeholder="https://www.amazon.com/dp/XXXXXXXXXX"
             disabled={loading}
-            className="flex-1 h-16 px-5 font-bold text-base bg-white outline-none placeholder:text-black/30
-              focus:bg-[#FFD93D] transition-colors duration-100 border-r-0 md:border-r-4 md:border-black disabled:opacity-50"
+            className="flex-1 min-w-0 h-16 px-3 md:px-5 font-bold text-base bg-white outline-none placeholder:text-black/30
+              truncate focus:bg-[#FFD93D] transition-colors duration-100 border-r-4 border-black disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={loading}
-            className="h-16 px-6 shrink-0 bg-black text-white font-black text-sm uppercase tracking-wide
+            className="h-16 px-4 md:px-6 shrink-0 bg-black text-white font-black text-sm uppercase tracking-wide
               flex items-center justify-center gap-2 hover:bg-[#FF6B6B] hover:text-black transition-all duration-100
               active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -87,11 +87,12 @@ export default function AddProductForm({ onAdd }: AddProductFormProps) {
                     borderRadius: 0,
                   }}
                 />
-                <span>Fetching...</span>
+                <span className="hidden sm:inline">Fetching...</span>
               </>
             ) : (
               <>
-                Track Product
+                <span className="hidden sm:inline">Track Product</span>
+                <span className="sm:hidden">Track</span>
                 <ArrowRight className="w-5 h-5 stroke-[3px]" />
               </>
             )}
