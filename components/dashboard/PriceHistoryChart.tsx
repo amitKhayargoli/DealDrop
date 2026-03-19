@@ -8,7 +8,7 @@ interface PriceHistoryChartProps {
   onClose: () => void;
 }
 
-const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
+const formatPrice = (p: number) => `Rs ${p.toLocaleString("en-IN")}`;
 const formatDate = (d: string) => {
   const dt = new Date(d);
   return dt.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
@@ -37,8 +37,12 @@ export default function PriceHistoryChart({
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
+  const xDivisor = history.length > 1 ? history.length - 1 : 1;
+
   const toPoint = (i: number, v: number) => ({
-    x: PAD.left + (i / (history.length - 1)) * innerW,
+    x: history.length === 1
+      ? PAD.left + innerW / 2  // centre single point
+      : PAD.left + (i / xDivisor) * innerW,
     y: PAD.top + innerH - ((v - min) / range) * innerH,
   });
 

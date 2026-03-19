@@ -53,32 +53,41 @@ export async function addProduct(formData: FormData) {
     const newPrice = parseFloat(productData.currentPrice.toString());
     const currency = productData.currencyCode || "NPR";
 
-    const { data: existingProduct } = await supabase
+    const { data: existingProduct, error: fetchError } = await supabase
       .from("products")
       .select("id,current_price")
       .eq("user_id", userId)
       .eq("url", url)
-      .single();
+      .maybeSingle();
 
+    if (fetchError) {
+      console.error("Error fetching existing product:", fetchError);
+    }
+
+    console.log("Existing product fetch result:", existingProduct);
     const isUpdate = !!existingProduct;
+
+    const upsertData: any = {
+      user_id: userId,
+      url,
+      name: productData.productName,
+      current_price: newPrice,
+      currency: currency,
+      image_url: productData.productImageUrl || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Only set created_at for new products to avoid overwriting it
+    if (!isUpdate) {
+      upsertData.created_at = new Date().toISOString();
+    }
 
     const { data, error } = await supabase
       .from("products")
-      .upsert(
-        {
-          user_id: userId,
-          url,
-          name: productData.productName,
-          current_price: newPrice,
-          currency: currency,
-          image_url: productData.productImageUrl || null,
-          created_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id, url",
-          ignoreDuplicates: false,
-        },
-      )
+      .upsert(upsertData, {
+        onConflict: "user_id, url",
+        ignoreDuplicates: false,
+      })
       .select()
       .single();
 
@@ -87,17 +96,27 @@ export async function addProduct(formData: FormData) {
       throw error;
     }
 
-    // Add to price history
-    const shouldAddHistory =
-      !isUpdate || existingProduct.current_price !== newPrice;
+    // Add to price history if it's a new product or price changed
+    const oldPrice = isUpdate ? Number(existingProduct.current_price) : null;
+    const shouldAddHistory = !isUpdate || oldPrice !== newPrice;
 
     if (shouldAddHistory) {
-      await supabase.from("price_history").insert({
+      console.log(`Adding history point: Product ${data.id}, Price ${newPrice}`);
+      const { error: historyError } = await supabase.from("price_history").insert({
         product_id: data.id,
         price: newPrice,
         currency: currency,
-        recorded_at: new Date().toISOString(),
+        checked_at: new Date().toISOString(),
       });
+
+      if (historyError) {
+        console.error("Error inserting price history:", historyError);
+        throw new Error(`Failed to record price history: ${historyError.message}`);
+      } else {
+        console.log("History point added successfully");
+      }
+    } else {
+      console.log("Price unchanged, skipping history point");
     }
 
     revalidatePath("/dashboard");
@@ -150,9 +169,16 @@ export async function getProducts() {
   try {
     const { supabase, userId } = await getSupabaseUser();
 
+    // Fetch products with their full price history in one query
     const { data, error } = await supabase
       .from("products")
-      .select("*")
+      .select(`
+        *,
+        price_history (
+          price,
+          checked_at
+        )
+      `)
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -169,23 +195,42 @@ export async function getProducts() {
       if (url.includes("flipkart.")) platform = "flipkart";
       if (url.includes("daraz.")) platform = "daraz";
 
+      // Sort history ascending by checked_at and parse prices
+      const history: { price: number; date: string }[] = (item.price_history ?? [])
+        .map((h: any) => ({
+          price: typeof h.price === "string" ? parseFloat(h.price) : h.price,
+          date: h.checked_at,
+        }))
+        .filter((h: any) => !isNaN(h.price))
+        .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      const prices = history.map((h) => h.price);
+
+      const lowestPrice = prices.length ? Math.min(...prices) : currentPrice;
+      const highestPrice = prices.length ? Math.max(...prices) : currentPrice;
+      // Original = first ever recorded price; falls back to current if no history yet
+      const originalPrice = prices.length ? prices[0] : currentPrice;
+      const priceChange = currentPrice - originalPrice;
+      const priceChangePercent =
+        originalPrice !== 0 ? (priceChange / originalPrice) * 100 : 0;
+
       return {
         id: item.id,
         name: item.name || "Unknown Product",
-        url: url,
+        url,
         imageUrl: item.image_url || "",
-        currentPrice: currentPrice,
-        originalPrice: currentPrice,
-        lowestPrice: currentPrice,
-        highestPrice: currentPrice,
-        priceChange: 0,
-        priceChangePercent: 0,
-        platform: platform,
+        currentPrice,
+        originalPrice,
+        lowestPrice,
+        highestPrice,
+        priceChange,
+        priceChangePercent,
+        platform,
         rating: 0,
         currency: item.currency || "INR",
         addedAt: item.created_at,
         category: "Product",
-        priceHistory: [],
+        priceHistory: history,
       };
     });
   } catch (error) {
@@ -202,15 +247,19 @@ export async function getPriceHistory(productId: string) {
       .from("price_history")
       .select("*")
       .eq("product_id", productId)
-      .order("recorded_at", { ascending: true });
+      .order("checked_at", { ascending: true });
 
     if (error) throw error;
 
-    return data.map((item: any) => ({
-      ...item,
-      price:
-        typeof item.price === "string" ? parseFloat(item.price) : item.price,
-    }));
+    return data.map((item: any) => {
+      const price =
+        typeof item.price === "string" ? parseFloat(item.price) : item.price;
+      return {
+        ...item,
+        price,
+        date: item.checked_at, // Map checked_at to date for the chart component
+      };
+    });
   } catch (error) {
     console.error("Error fetching price history:", error);
     return [];

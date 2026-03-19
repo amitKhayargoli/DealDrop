@@ -43,7 +43,9 @@ export default function ProductCard({
   onViewHistory,
   onDelete,
 }: ProductCardProps) {
+  const hasHistory = product.priceHistory && product.priceHistory.length >= 1;
   const isDown = product.priceChangePercent < 0;
+  const isUp = product.priceChangePercent > 0;
   const pct = Math.abs(product.priceChangePercent).toFixed(1);
 
   return (
@@ -56,7 +58,7 @@ export default function ProductCard({
               ? "bg-[#FFD93D]"
               : product.platform === "flipkart"
                 ? "bg-[#3b82f6] text-white"
-                : "bg-[#f97316] text-white" // Daraz orange
+                : "bg-[#f97316] text-white"
           }`}
         >
           <span className="font-black text-xs uppercase tracking-widest">
@@ -143,23 +145,32 @@ export default function ProductCard({
               {formatPrice(product.currentPrice, product.currency)}
             </p>
           </div>
-          {/* Price change badge */}
-          <div
-            className={`border-4 border-black px-3 py-2 neo-shadow-sm flex items-center gap-1.5 ${
-              isDown ? "bg-[#86EFAC]" : "bg-[#FCA5A5]"
-            }`}
-          >
-            {isDown ? (
-              <TrendingDown className="w-4 h-4 stroke-[3px] text-green-800" />
-            ) : (
-              <TrendingUp className="w-4 h-4 stroke-[3px] text-red-800" />
-            )}
-            <span
-              className={`font-black text-sm ${isDown ? "text-green-800" : "text-red-800"}`}
+
+          {/* Price change badge — only shown when there's meaningful history */}
+          {hasHistory && (
+            <div
+              className={`border-4 border-black px-3 py-2 neo-shadow-sm flex items-center gap-1.5 ${
+                isDown ? "bg-[#86EFAC]" : isUp ? "bg-[#FCA5A5]" : "bg-[#E5E7EB]"
+              }`}
             >
-              {isDown ? "▼" : "▲"} {pct}%
-            </span>
-          </div>
+              {isDown ? (
+                <TrendingDown className="w-4 h-4 stroke-[3px] text-green-800" />
+              ) : isUp ? (
+                <TrendingUp className="w-4 h-4 stroke-[3px] text-red-800" />
+              ) : null}
+              <span
+                className={`font-black text-sm ${
+                  isDown
+                    ? "text-green-800"
+                    : isUp
+                      ? "text-red-800"
+                      : "text-black/50"
+                }`}
+              >
+                {isDown ? "▼" : isUp ? "▲" : "—"} {pct}%
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Original / Low / High */}
@@ -168,24 +179,30 @@ export default function ProductCard({
             [
               {
                 label: "Original",
-                value: formatPrice(product.originalPrice, product.currency),
-                highlight: false,
+                value: hasHistory
+                  ? formatPrice(product.originalPrice, product.currency)
+                  : "—",
+                bg: "",
               },
               {
                 label: "Lowest",
-                value: formatPrice(product.lowestPrice, product.currency),
-                highlight: true,
+                value: hasHistory
+                  ? formatPrice(product.lowestPrice, product.currency)
+                  : "—",
+                bg: hasHistory ? "bg-[#86EFAC]" : "bg-[#F3F4F6]",
               },
               {
                 label: "Highest",
-                value: formatPrice(product.highestPrice, product.currency),
-                highlight: false,
+                value: hasHistory
+                  ? formatPrice(product.highestPrice, product.currency)
+                  : "—",
+                bg: hasHistory ? "bg-[#FCA5A5]" : "bg-[#F3F4F6]",
               },
             ] as const
           ).map((stat, i) => (
             <div
               key={stat.label}
-              className={`px-2 py-2 text-center ${i < 2 ? "border-r-4 border-black" : ""} ${stat.highlight ? "bg-[#86EFAC]" : ""}`}
+              className={`px-2 py-2 text-center ${i < 2 ? "border-r-4 border-black" : ""} ${stat.bg}`}
             >
               <p className="font-bold text-xs uppercase tracking-widest text-black/40 leading-none">
                 {stat.label}
@@ -206,15 +223,13 @@ export default function ProductCard({
         {/* Actions */}
         <div className="flex gap-2">
           <button
-            disabled={
-              !product.priceHistory || product.priceHistory.length === 0
-            }
+            disabled={!hasHistory}
             onClick={() => onViewHistory(product)}
             className="flex-1 py-2.5 border-4 border-black bg-black text-white font-black text-xs uppercase tracking-wide
               hover:bg-[#FF6B6B] hover:text-black transition-colors duration-100
               active:translate-x-[2px] active:translate-y-[2px] active:shadow-none neo-shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            View History
+            {hasHistory ? "View History" : "No History Yet"}
           </button>
           <button
             className="py-2.5 px-3 border-4 border-black bg-[#C4B5FD] font-black text-xs uppercase
@@ -241,8 +256,9 @@ function MiniChart({ data, isDown }: { data: number[]; isDown: boolean }) {
   const range = max - min || 1;
   const W = 180;
   const H = 40;
+  const divisor = data.length > 1 ? data.length - 1 : 1; // prevent 0/0 = NaN
   const pts = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * W;
+    const x = data.length === 1 ? W / 2 : (i / divisor) * W; // centre single point
     const y = H - ((v - min) / range) * H;
     return `${x},${y}`;
   });

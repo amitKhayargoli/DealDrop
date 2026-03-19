@@ -100,8 +100,14 @@ export default function DashboardPage() {
   };
 
   const handleViewHistory = async (product: TrackedProduct) => {
-    const history = await getPriceHistory(product.id);
-    setSelectedProduct({ ...product, priceHistory: history });
+    // priceHistory is already embedded in the product from getProducts()
+    // but refresh from DB if it happens to be empty
+    if (product.priceHistory && product.priceHistory.length > 0) {
+      setSelectedProduct(product);
+    } else {
+      const history = await getPriceHistory(product.id);
+      setSelectedProduct({ ...product, priceHistory: history });
+    }
   };
 
   return (

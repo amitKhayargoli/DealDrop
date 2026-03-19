@@ -71,14 +71,19 @@ export async function POST(request: NextRequest) {
         results.updated++;
 
         // Track price history if changed
-        if (newPrice !== oldPrice) {
+        const currentNum = Number(newPrice);
+        const oldNum = Number(oldPrice);
+        console.log(`Product ${product.id}: oldPrice=${oldNum} (type: ${typeof oldPrice}), newPrice=${currentNum} (type: ${typeof newPrice}), changed=${currentNum !== oldNum}`);
+
+        if (currentNum !== oldNum) {
           results.priceChanges++;
-          await supabase.from("price_history").insert({
+          const { error: historyError } = await supabase.from("price_history").insert({
             product_id: product.id,
             price: newPrice,
             currency: productData.currencyCode || product.currency,
-            recorded_at: new Date().toISOString(),
+            checked_at: new Date().toISOString(),
           });
+
 
           if (newPrice < oldPrice) {
             // Email the user
@@ -102,9 +107,7 @@ export async function POST(request: NextRequest) {
 
               if (result.success) {
                 results.alertSent++;
-              } else {
-                console.error("❌ Email failed:", result.error);
-              }
+              } 
             }
           }
         }
