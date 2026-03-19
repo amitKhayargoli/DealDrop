@@ -81,18 +81,21 @@ export default function Navbar() {
             </a>
 
             {/* Desktop Nav Links */}
-            <div className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  onClick={link.onClick}
-                  className="px-3 py-2 font-bold text-sm uppercase tracking-wide border-2 border-transparent hover:border-black hover:bg-[#FFD93D] hover:neo-shadow-sm transition-all duration-100"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
+
+            {!user ? (
+              <div className="hidden md:flex items-center gap-1">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={link.onClick}
+                    className="px-3 py-2 font-bold text-sm uppercase tracking-wide border-2 border-transparent hover:border-black hover:bg-[#FFD93D] hover:neo-shadow-sm transition-all duration-100"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            ) : null}
 
             {/* Desktop CTA — logged out */}
             {!user ? (
@@ -114,13 +117,13 @@ export default function Navbar() {
             ) : (
               /* Desktop CTA — logged in */
               <div className="hidden md:flex items-center gap-3 relative">
-                <a
+                {/* <a
                   href="/dashboard"
                   className="px-4 py-2.5 font-bold text-sm uppercase tracking-wide border-4 border-black bg-[#C4B5FD] neo-shadow-sm hover:-translate-y-0.5 hover:neo-shadow transition-all duration-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex items-center gap-2"
                 >
                   <LayoutDashboard className="w-4 h-4 stroke-[3px]" />
                   Dashboard
-                </a>
+                </a> */}
 
                 {/* Avatar dropdown */}
                 <div className="relative">
@@ -220,14 +223,14 @@ export default function Navbar() {
                       {displayName}
                     </span>
                   </div>
-                  <a
+                  {/* <a
                     href="/dashboard"
                     onClick={() => setMenuOpen(false)}
                     className="py-3 font-bold text-sm uppercase tracking-wide border-4 border-black bg-[#C4B5FD] neo-shadow-sm flex items-center justify-center gap-2"
                   >
                     <LayoutDashboard className="w-4 h-4 stroke-[3px]" />
                     Dashboard
-                  </a>
+                  </a> */}
                   <button
                     onClick={() => {
                       handleSignOut();

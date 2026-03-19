@@ -37,24 +37,43 @@ export default function PriceHistoryChart({
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
+
+
+  // Y-axis ticks at every 500, snapping to data range
+  const TICK_INTERVAL = 500;
+  const yAxisMin = Math.floor(min / TICK_INTERVAL) * TICK_INTERVAL;
+  const yAxisMax = Math.ceil(max / TICK_INTERVAL) * TICK_INTERVAL;
+  const yTickValues: number[] = [];
+  for (let v = yAxisMin; v <= yAxisMax; v += TICK_INTERVAL) {
+    yTickValues.push(v);
+  }
+  // Need at least 2 ticks; if range is 0 add one above
+  if (yTickValues.length < 2) yTickValues.push(yAxisMax + TICK_INTERVAL);
+
+  // Extended y range so ticks fit nicely
+  const yMin = yTickValues[0];
+  const yMax = yTickValues[yTickValues.length - 1];
+  const yRange = yMax - yMin || 1;
+
   const xDivisor = history.length > 1 ? history.length - 1 : 1;
 
   const toPoint = (i: number, v: number) => ({
     x: history.length === 1
-      ? PAD.left + innerW / 2  // centre single point
+      ? PAD.left + innerW / 2
       : PAD.left + (i / xDivisor) * innerW,
-    y: PAD.top + innerH - ((v - min) / range) * innerH,
+    y: PAD.top + innerH - ((v - yMin) / yRange) * innerH,
   });
 
   const pts = history.map((h, i) => toPoint(i, h.price));
   const polylineStr = pts.map((p) => `${p.x},${p.y}`).join(" ");
 
-  // Y-axis ticks
-  const yTicks = 5;
-  const yTickValues = Array.from(
-    { length: yTicks },
-    (_, i) => min + (range / (yTicks - 1)) * i,
-  );
+  const tickY = (val: number) =>
+    PAD.top + innerH - ((val - yMin) / yRange) * innerH;
+
+  const formatTickLabel = (val: number) => {
+    if (val >= 1000) return `${(val / 1000).toFixed(val % 1000 === 0 ? 0 : 1)}k`;
+    return String(val);
+  };
 
   return (
     <div
@@ -130,7 +149,7 @@ export default function PriceHistoryChart({
           >
             {/* Grid lines */}
             {yTickValues.map((tick, i) => {
-              const y = PAD.top + innerH - ((tick - min) / range) * innerH;
+              const y = tickY(tick);
               return (
                 <g key={i}>
                   <line
@@ -152,7 +171,7 @@ export default function PriceHistoryChart({
                     fill="#000"
                     opacity="0.5"
                   >
-                    {(tick / 1000).toFixed(0)}k
+                    {formatTickLabel(tick)}
                   </text>
                 </g>
               );

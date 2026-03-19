@@ -36,6 +36,14 @@ const formatPrice = (p: number | undefined | null, currency: string) => {
   return `${currency} ${p.toLocaleString("en-IN")}`;
 };
 
+const formatPriceParts = (p: number | undefined | null, currency: string) => {
+  if (typeof p !== "number" || isNaN(p)) return { symbol: "—", value: "" };
+  const formattedNum = p.toLocaleString("en-IN");
+  if (currency === "NPR") return { symbol: "Rs.", value: formattedNum };
+  if (currency === "INR") return { symbol: "₹", value: formattedNum };
+  return { symbol: currency, value: formattedNum };
+};
+
 // Removed broken ConfirmDeleteDialog helper component
 
 export default function ProductCard({
@@ -179,45 +187,44 @@ export default function ProductCard({
             [
               {
                 label: "Original",
-                value: hasHistory
-                  ? formatPrice(product.originalPrice, product.currency)
-                  : "—",
+                parts: hasHistory
+                  ? formatPriceParts(product.originalPrice, product.currency)
+                  : { symbol: "—", value: "" },
                 bg: "",
               },
               {
                 label: "Lowest",
-                value: hasHistory
-                  ? formatPrice(product.lowestPrice, product.currency)
-                  : "—",
+                parts: hasHistory
+                  ? formatPriceParts(product.lowestPrice, product.currency)
+                  : { symbol: "—", value: "" },
                 bg: hasHistory ? "bg-[#86EFAC]" : "bg-[#F3F4F6]",
               },
               {
                 label: "Highest",
-                value: hasHistory
-                  ? formatPrice(product.highestPrice, product.currency)
-                  : "—",
+                parts: hasHistory
+                  ? formatPriceParts(product.highestPrice, product.currency)
+                  : { symbol: "—", value: "" },
                 bg: hasHistory ? "bg-[#FCA5A5]" : "bg-[#F3F4F6]",
               },
             ] as const
           ).map((stat, i) => (
             <div
               key={stat.label}
-              className={`px-2 py-2 text-center ${i < 2 ? "border-r-4 border-black" : ""} ${stat.bg}`}
+              className={`px-1 py-2 text-center flex flex-col items-center justify-center ${i < 2 ? "border-r-4 border-black" : ""} ${stat.bg}`}
             >
-              <p className="font-bold text-xs uppercase tracking-widest text-black/40 leading-none">
+              <p className="font-bold text-[10px] uppercase tracking-wider text-black/40 leading-none mb-1">
                 {stat.label}
               </p>
-              <p className="font-black text-sm mt-1">{stat.value}</p>
+              <div className="flex flex-col leading-tight">
+                <span className="font-bold text-[10px] text-black/60">
+                  {stat.parts.symbol}
+                </span>
+                <span className="font-black text-sm">
+                  {stat.parts.value}
+                </span>
+              </div>
             </div>
           ))}
-        </div>
-
-        {/* Mini sparkline chart */}
-        <div className="border-4 border-black p-2 bg-[#FFFDF5]">
-          <MiniChart
-            data={(product.priceHistory ?? []).map((p) => p.price)}
-            isDown={isDown}
-          />
         </div>
 
         {/* Actions */}
@@ -266,6 +273,7 @@ function MiniChart({ data, isDown }: { data: number[]; isDown: boolean }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-10 overflow-visible">
+      
       <polyline
         points={pts.join(" ")}
         fill="none"

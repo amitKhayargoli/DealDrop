@@ -22,9 +22,3 @@ export interface TrackedProduct {
   category: string;
 }
 
-export const dashboardStats = {
-  totalTracked: 4,
-  totalSaved: 8000,
-  priceDropsToday: 2,
-  avgSavingsPercent: 24,
-};

@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import AddProductForm from "@/components/dashboard/AddProductForm";
 import ProductCard from "@/components/dashboard/ProductCard";
 import PriceHistoryChart from "@/components/dashboard/PriceHistoryChart";
-import { dashboardStats } from "@/lib/mockData";
 import {
   TrendingDown,
   Package,
@@ -173,12 +172,12 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-                <div className="hidden sm:flex items-center gap-2 border-2 border-black/20 px-3 py-1">
+                {/* <div className="hidden sm:flex items-center gap-2 border-2 border-black/20 px-3 py-1">
                   <BellRing className="w-4 h-4 stroke-[2.5px]" />
                   <span className="font-bold text-xs uppercase tracking-widest">
                     {dashboardStats.priceDropsToday} drops today
                   </span>
-                </div>
+                </div> */}
               </div>
             )}
 
